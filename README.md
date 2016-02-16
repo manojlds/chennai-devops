@@ -3,5 +3,5 @@
 Clone the repo and run:
 
 ```bash
-$ ./force start dns
+$ ./force dns start
 $ ./force run chennai-devops
