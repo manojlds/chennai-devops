@@ -137,9 +137,9 @@ layout: false
   ## About me
 ]
 .right-column[
-  Software Engineer at Indix for last 1.5 years.
+  Software Engineer at Indix for the last 1.5 years.
 
-  Previously with ThoughtWorks
+  Previously worked with ThoughtWorks.
 
   Author of the book [Learning Continuous Integration with TeamCity](https://bitly.com/learningci)
 
@@ -157,6 +157,11 @@ layout: false
 - Our approach to automating dev box setup.
 
 - With focus on a docker based development.
+
+## Background story
+
+We were starting with a new product - a Node.js based fronted, and Scala based services, backed by PostgreSQL.
+We wanted to explore some ways for bootstraping developers and their workstations in a repeatable and efficient manner.
 
 
 ]
@@ -228,6 +233,7 @@ layout: false
 ]
 .right-column[
 - Keys to access machines
+
 - Appropriate SSH config to enable easier access
 ]
 ---
@@ -287,11 +293,166 @@ Community Ansible role `docker.ubuntu` is used for this
 
 ]
 ---
+.left-column[
+  ## What's automated?
+### - Git hooks
+### - SSH keys and config
+### - Docker and friends
+### - Dev DNS
+]
+.right-column[
+Local servers/applications can be reached at, say, `http://localhost:9000`.
+
+This means knowing the port for each app. Also, `docker-machine` on OS X means the above app is actually at `http://{DOCKER_MACHINE_IP}:9000`.
+
+We utilized `dnsmasq` and `nginx-proxy` (both running as separate docker containers) to provide a simple local DNS setup that resolves `*.dev` to the appropriate container.
+
+On OSX, the `*.dev` resolves to the docker machine, and on Ubuntu, it resolves to localhost.
+
+
+.footnote[The dns containers are orchestrated using `docker-compose`, which is what we will talk next...]
+]
+---
+.left-column[
+  ## What's automated?
+### - Git hooks
+### - SSH keys and config
+### - Docker and friends
+### - Dev DNS
+### - Docker compose
+]
+.right-column[
+docker-compose is used to orchestrate containers that together make an app or solve a purpose.
+
+For example, the DNS containers are defined with the following docker-compose yaml file:
+
+```yaml
+nginx:
+  image: jwilder/nginx-proxy
+  ports:
+    - "80:80"
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+  restart: always
+dnsmasq:
+  image: andyshinn/dnsmasq
+  ports:
+    - "53:53/tcp"
+    - "53:53/udp"
+  cap_add:
+    - NET_ADMIN
+  command: --address=/dev/192.168.99.100
+  restart: always
+```
+]
+---
+.left-column[
+  ## What's automated?
+### - Git hooks
+### - SSH keys and config
+### - Docker and friends
+### - Dev DNS
+### - Docker compose
+]
+.right-column[
+docker-compose is used to run the apps (Node.js, Scala) along with their dependencies including databases.
+
+Sample docker-compose for running functional tests in local and CI:
+
+```yaml
+app_built:
+  image: registry/repository/app:${VERSION}
+  ports:
+    - "9090:9090"
+  environment:
+    - NODE_ENV="production"
+chrome_standalone:
+  image: selenium/standalone-chrome:2.48.2
+  volumes:
+  - /dev/shm:/dev/shm
+  ports:
+  - 4444:4444
+  links:
+  - app_built
+app_ft:
+  build: .
+  dockerfile: Dockerfile.build
+  command: bash -c "npm install && npm run ft"
+  volumes:
+  - .:/app:rw
+  links:
+  - chrome_standalone
+  - app_built
+  environment:
+  - NODE_ENV=docker
+```
+]
+---
+.left-column[
+  ## What's automated?
+### - ...
+### - CLI for development workflow
+]
+.right-column[
+We also have a small ruby based CLI (and ruby is installed via Ansible as well) for some of the workflow. Being Start Wars fans, we called this `force`.
+
+Start and stop DNS:
+
+```bash
+force dns start
+force dns stop
+```
+
+Start and stop particular application
+
+```bash
+force run app1
+force run app2
+force stop app1
+```
+
+Run the bootstrap again:
+
+```bash
+force bootstrap
+```
+]
+---
+.left-column[
+  ## What's automated?
+### - ...
+### - CLI for development workflow
+### - Updates to the setup
+]
+.right-column[
+We maintain a simple `version` file in the repository that tracks the latest version of the setup code.
+
+Every run of the setup updates the file at `~/.force/version` to denote which version has run in the box.
+
+Any run of the `force` command, compares these two version, and notifies the user if their setup is lagging behind:
+
+```bash
+$ force
+Force CLI for development workflow
+...
+
+[info] Your dev setup is old. Run force bootstrap to update
+
+$ force bootstrap
+```
+
+]
+---
 name: last-page
 template: inverse
 
 ## Happy automating!
-.footnote[Follow me on twitter [@manojlds](https://twitter.com/manojlds)]
+
+###Follow me on twitter [@manojlds](https://twitter.com/manojlds)
+
+###Read my blog at [http://stacktoheap.com](http://stacktoheap.com)
+
+###This presentation available at [https://bit.ly/devboxsetup](https://bit.ly/devboxsetup)
 
     </textarea>
     <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
