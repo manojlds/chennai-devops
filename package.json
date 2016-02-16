@@ -1,0 +1,25 @@
+{
+  "name": "chennai-devops",
+  "version": "1.0.0",
+  "description": "Dummy node.js app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manojlds/chennai-devops.git"
+  },
+  "keywords": [
+    "devops"
+  ],
+  "author": "manojlds",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manojlds/chennai-devops/issues"
+  },
+  "homepage": "https://github.com/manojlds/chennai-devops#readme",
+  "dependencies": {
+    "express": "^4.13.4"
+  }
+}
