@@ -1,0 +1,99 @@
+#!/usr/bin/env ruby
+
+module OS
+  def OS.windows?
+    (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+  end
+
+  def OS.mac?
+   (/darwin/ =~ RUBY_PLATFORM) != nil
+  end
+
+  def OS.unix?
+    !OS.windows?
+  end
+
+  def OS.linux?
+    OS.unix? and not OS.mac?
+  end
+end
+
+class Force
+  HELP_BANNER = <<HEREDOC
+Force CLI for development workflow
+Usage:
+  force [COMMAND] [ARGS...]"
+Commands:
+  build              Run build commands
+  run                Run a particular component
+  dns                Start (up) or stop (stop) dns for dev
+  machine            Start or stop the dev docker machine
+  bootstrap          Update dev configurations
+  help               Print this help text
+HEREDOC
+
+  FORCE_META_DIR = "#{Dir.home}/.force"
+  FORCE_BOOTSTRAP_VERSION_FILE="#{FORCE_META_DIR}/bootstrap"
+  PASS_COMMANDS = %w{run}
+  INTERNAL_COMMANDS = %w{build dns sync machine bootstrap}
+
+  def initialize(args)
+    if PASS_COMMANDS.include?(args[0])
+      send(args[0].to_sym, args)
+    elsif INTERNAL_COMMANDS.include?(args[0])
+      send(args.shift.to_sym, args)
+    else
+      help
+    end
+
+    check_bootstrap_version
+  end
+
+  def rebuild()
+    system("docker-compose build")
+  end
+
+  def build(args)
+    rebuild
+    system({"GO_REVISION" => ENV["GO_REVISION"] || `git rev-parse --short HEAD`} ,"docker-compose run -e GO_REVISION=$GO_REVISION build")
+  end
+
+  def run(args)
+    rebuild
+    args.insert(1, "-e GO_REVISION=#{ENV["GO_REVISION"] || `git rev-parse --sq --short HEAD`}")
+    args.insert(1, "--rm")
+    args.insert(1, "--service-ports")
+    args.unshift("docker-compose")
+    system(args.join(" "))
+  end
+
+  def dns(args)
+    daemon = args[0] == "up" ? " -d" : ""
+    system("docker-compose -f #{__dir__}/docker-compose.dns.yml -p force_dns #{args[0]}#{daemon}") if OS.mac?
+    system("docker-compose -f #{__dir__}/docker-compose.dns.ubuntu.yml -p force_dns #{args[0]}#{daemon}") if OS.linux?
+  end
+
+  def machine(args)
+    system("docker-machine #{args[0]} dev")
+    #TODO: Better way to do this?
+    puts("Run \033[0;33meval $(docker-machine env dev)\033[0m to finish the setup") if args[0] == "start"
+  end
+
+  def bootstrap(args)
+    Dir.chdir("#{__dir__}/.."){
+      system("./bootstrap.sh")
+    }
+  end
+
+  def check_bootstrap_version()
+    bootstrap_version = File.read(File.expand_path("version", __dir__)).to_i
+    bootstrap_version_applied = File.exists?(FORCE_BOOTSTRAP_VERSION_FILE) ? File.read(FORCE_BOOTSTRAP_VERSION_FILE).to_i : 0
+    puts "\n[\033[0;33minfo\033[0m] Your dev setup is old. Run \033[0;33mforce bootstrap\033[0m to update" if bootstrap_version_applied < bootstrap_version
+  end
+
+  def help()
+    puts HELP_BANNER
+  end
+end
+
+Force.new(ARGV) if __FILE__==$0
