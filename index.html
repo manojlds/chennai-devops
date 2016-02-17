@@ -180,9 +180,9 @@ We have been using docker in production (Mesos and Kubernetes), and wanted to us
 
 - Setup a workflow that enables us to deliver faster.
 
-- Make onboarding new folks into the project much faster.
+- Make onboarding new folks into the project much more efficient.
 
-- Ensure tools, conventions and guidelines are consitent, and additions or changes are propagated across the team.
+- Ensure tools, conventions and guidelines are consistent, and additions or changes are propagated across the team.
 
 - Support OSX and Ubuntu.
 ]
@@ -207,6 +207,8 @@ template: inverse
 - dnsmasq and nginx for local dns
 
 - Ruby for a dev workflow CLI
+
+- Vagrant for testing the changes (and work on Ubuntu bootstrap from OS X)
 
 - ...and of course, shell scripts!
 
@@ -444,7 +446,9 @@ app_ft:
 ### - CLI for development workflow
 ]
 .right-column[
-We also have a small ruby based CLI (and ruby is installed via Ansible as well) for some of the workflow. Being Start Wars fans, we called this `force`.
+We also have a small ruby based CLI (and ruby is installed via Ansible as well) for some of the workflow. Being Star Wars fans, we called this `force`.
+
+The CLI provides a consistent interface to run any app, and not worry about internals like docker flags etc.
 
 Start and stop DNS:
 
@@ -479,7 +483,7 @@ We maintain a simple `version` file in the repository that tracks the latest ver
 
 Every run of the setup updates the file at `~/.force/version` to denote which version has run in the box.
 
-Any run of the `force` command, compares these two version, and notifies the user if their setup is lagging behind:
+Any run of the `force` command compares these two versions, and notifies the user if their setup is lagging behind:
 
 ```bash
 $ force
