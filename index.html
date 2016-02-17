@@ -20,6 +20,7 @@
         margin-bottom: 0;
       }
       .small-img img { width: 250px; height: 320px; }
+      .otto-img img { width: 640px; height: 226px; }
       .remark-slide-content h1 { font-size: 3em; }
       .remark-slide-content h2 { font-size: 2em; }
       .remark-slide-content h3 { font-size: 1.6em; }
@@ -186,7 +187,7 @@ We have been using docker in production (Mesos and Kubernetes), and wanted to us
 ---
 template: inverse
 
-#Demo time!!!
+#Demo time!
 ---
 .left-column[
   ## What is the talk about?
@@ -194,6 +195,7 @@ template: inverse
   ## The tools used
 ]
 .right-column[
+### Tools that we decided to use
 - Ansible
 
 - homebrew and homebrew-cask on OS X
@@ -205,6 +207,46 @@ template: inverse
 - Ruby for a dev workflow CLI
 
 - ...and of course, shell scripts!
+
+### Tools considered
+
+- OSXC
+- Boxen
+
+]
+---
+.left-column[
+  ## What is the talk about?
+  ## Goals for the automation
+  ## The tools used
+  ## Bootstrap & Code organization
+]
+.right-column[
+Anyone can just clone the repo and run the provided script - `./bootstrap.sh`.
+
+Bootstrap code is organized as follows:
+```bash
+dev
+├── Vagrantfile
+├── ansible
+│   ├── library
+│   ├── osx.yml
+│   ├── roles
+│   │   ├── common
+│   │   ├── dns
+│   │   ├── docker.ubuntu
+│   │   ├── kubectl
+│   │   ├── python
+│   │   └── ruby
+│   └── ubuntu.yml
+├── bootstrap_osx.sh
+├── bootstrap_ubuntu.sh
+├── docker
+│   ├── bootsync.sh
+│   └── docker_machine_setup.sh
+├── requirements.yml
+└── version
+```
 ]
 ---
 .left-column[
@@ -447,6 +489,20 @@ Force CLI for development workflow
 $ force bootstrap
 ```
 
+]
+---
+.left-column[
+  ## Future alternatives
+]
+.right-column[
+  ## Otto
+  [Otto - https://www.ottoproject.io/](https://www.ottoproject.io/) is a new tool by Hashicorp, the same folks tha create Vagrant.
+
+  .otto-img[![otto](otto.png)]
+
+  It is seen as a successor to Vagrant, and automated dev environments is one of its biggest focus.
+
+  This is a tool that has to be watched in this space!
 ]
 ---
 name: last-page
